@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rete Magazzini Italia</title>
+<style>
+:root{--bg:#f4f6fa;--surface:#fff;--text:#14213d;--muted:#6b7690;--border:#e3e8f0;--accent:#2f5bea;--accent-soft:#e8eeff;--ok:#22b45e;--warn:#f5a524;--bad:#e5484d;--off:#d5dae4;--bubble:#eef1f7;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1320;--surface:#171e30;--text:#e9edf7;--muted:#929cb5;--border:#27304a;--accent:#6c8cff;--accent-soft:#222c4d;--off:#2b3450;--bubble:#222b44;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1320;--surface:#171e30;--text:#e9edf7;--muted:#929cb5;--border:#27304a;--accent:#6c8cff;--accent-soft:#222c4d;--off:#2b3450;--bubble:#222b44;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.4}
+button,input{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:360px 1fr;height:100%;max-width:1400px;margin:0 auto}
+.side{display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);min-height:0}
+.side header{padding:20px 18px 12px}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.stats{display:flex;gap:8px;margin-top:14px}
+.chip{flex:1;border:1px solid var(--border);background:var(--bg);border-radius:12px;padding:8px 10px;cursor:pointer;text-align:left;transition:.15s}
+.chip b{display:block;font-size:18px}
+.chip span{font-size:11px;color:var(--muted)}
+.chip.on{border-color:var(--accent);background:var(--accent-soft)}
+.search{margin:12px 18px 8px;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg);width:calc(100% - 36px);outline:none}
+.search:focus{border-color:var(--accent)}
+.days{display:flex;gap:6px;margin-top:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.day{flex:0 0 auto;min-width:48px;border:1px solid var(--border);background:var(--bg);border-radius:12px;padding:6px 8px;cursor:pointer;text-align:center;transition:.15s}
+.day small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase}
+.day b{font-size:15px}
+.day.on{border-color:var(--accent);background:var(--accent-soft)}
+.tag{font-size:12px;background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:3px 10px;font-weight:600}
+.list{overflow-y:auto;padding:6px 10px 16px;flex:1}
+.wh{display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:14px;padding:12px;margin-bottom:4px;cursor:pointer;transition:.15s}
+.wh:hover{background:var(--bg)}
+.wh.sel{background:var(--accent-soft);border-color:var(--accent)}
+.wh .n{font-weight:600}
+.wh .c{color:var(--muted);font-size:13px;margin-bottom:8px}
+.state{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}
+.light{display:inline-flex;gap:4px;padding:4px 6px;background:var(--off);border-radius:99px}
+.light i{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.18)}
+.light i.on.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.light i.on.warn{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.light i.on.bad{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+.t-ok{color:var(--ok)}.t-warn{color:var(--warn)}.t-bad{color:var(--bad)}
+.main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.empty{margin:auto;text-align:center;color:var(--muted);padding:24px}
+.empty .big{font-size:44px}
+.top{padding:18px 24px 0;background:var(--surface);border-bottom:1px solid var(--border)}
+.back{display:none;border:0;background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:6px 12px;margin-bottom:10px;cursor:pointer;font-weight:600}
+.top h2{margin:0;font-size:22px;letter-spacing:-.02em}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:6px 0 14px;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;overflow-x:auto}
+.tab{white-space:nowrap}
+.net{margin-top:10px;font-size:12.5px;color:var(--muted)}.net b{color:var(--text)}
+.trk{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:600}.trk .bar{height:6px}.trk span{white-space:nowrap}
+.trk.warn .bar div,.k.warn .bar div{background:var(--warn)}.trk.bad .bar div,.k.bad .bar div{background:var(--bad)}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.k{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px}
+.k small{color:var(--muted);font-size:12px;font-weight:600}
+.k .v{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:2px 0 8px}
+.k .v span{font-size:16px;color:var(--muted);font-weight:600}
+.k .d{font-size:12.5px;color:var(--muted);margin-top:8px}
+.k.ok .v{color:var(--ok)}.k.warn .v{color:var(--warn)}.k.bad .v{color:var(--bad)}
+.k.st0 .v{color:var(--warn)}.k.st1 .v{color:var(--accent)}.k.st2 .v{color:var(--ok)}
+.fl{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.fb{border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:6px 14px;cursor:pointer;font-size:13px;font-weight:600}
+.fb.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.hd{margin:0 0 12px;font-size:15px}
+.trl{display:grid;gap:10px}
+.tc{display:grid;grid-template-columns:auto 1fr auto;gap:8px 14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 16px}
+.tc .av{margin:0;width:38px;height:38px;grid-row:span 2}
+.tc small{color:var(--muted);font-size:12.5px}
+.steps{grid-column:2/4;display:flex;gap:4px}
+.steps i{flex:1;height:5px;border-radius:99px;background:var(--off)}
+.st0 .steps i.on{background:var(--warn)}.st1 .steps i.on{background:var(--accent)}.st2 .steps i.on{background:var(--ok)}
+.sb{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;text-align:center}
+.st0 .sb{background:rgba(245,165,36,.16);color:var(--warn)}
+.st1 .sb{background:var(--accent-soft);color:var(--accent)}
+.st2 .sb{background:rgba(34,180,94,.14);color:var(--ok)}
+.upd{border:1px solid var(--border);border-left:4px solid var(--ok);background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.upd.warn{border-left-color:var(--warn)}.upd.bad{border-left-color:var(--bad)}
+.upd .uh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
+.upd .av{width:26px;height:26px;font-size:10px;margin:0}
+.upd time{margin-left:auto;font-size:12px;color:var(--muted)}
+.upd p{margin:8px 0 0;font-size:14px}
+.rq{margin-top:12px;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:99px;padding:8px 16px;font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+.rq:hover:not(:disabled){background:var(--accent-soft)}
+.rq:disabled{opacity:.7;cursor:default;border-color:var(--border);color:var(--muted)}
+.upd.flash{animation:fl 1.4s ease}
+.why{margin-top:6px;font-size:13px;font-style:italic}
+.why small{display:block;font-style:normal;color:var(--muted);font-size:11.5px;margin-top:2px}
+@keyframes fl{0%{background:var(--accent-soft)}100%{background:var(--bg)}}
+.tab{border:0;background:transparent;padding:10px 16px;cursor:pointer;color:var(--muted);font-weight:600;border-bottom:3px solid transparent}
+.tab.on{color:var(--accent);border-color:var(--accent)}
+.body{flex:1;min-height:0;overflow-y:auto;padding:20px 24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.prog{display:flex;align-items:center;gap:12px;margin-bottom:14px;font-size:13px;color:var(--muted)}
+.bar{flex:1;height:8px;border-radius:99px;background:var(--off);overflow:hidden}
+.bar div{height:100%;background:var(--ok);border-radius:99px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:12px 16px;border-bottom:1px solid var(--border)}
+td{padding:12px 16px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:0}
+.av{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12px;margin-right:10px;vertical-align:middle}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:600}
+.badge.y{background:rgba(34,180,94,.14);color:var(--ok)}
+.badge.n{background:rgba(229,72,77,.14);color:var(--bad)}
+.chat{display:flex;flex-direction:column;height:100%;max-width:760px}
+.mgr{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.mgr .av{width:44px;height:44px;font-size:15px;margin:0}
+.mgr small{color:var(--muted);display:block}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:5px}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px 12px}
+.m{max-width:80%;padding:10px 14px;border-radius:16px;background:var(--bubble);align-self:flex-start;overflow-wrap:anywhere}
+.m.me{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.m:not(.me){border-bottom-left-radius:4px}
+.m time{display:block;font-size:11px;opacity:.65;margin-top:3px}
+.compose{display:flex;gap:8px;padding-top:10px}
+.compose input{flex:1;padding:12px 16px;border-radius:99px;border:1px solid var(--border);background:var(--surface);outline:none}
+.compose input:focus{border-color:var(--accent)}
+.send{border:0;background:var(--accent);color:#fff;border-radius:99px;padding:0 22px;font-weight:600;cursor:pointer}
+.send:active{transform:scale(.97)}
+@media (max-width:820px){
+ .app{grid-template-columns:1fr}
+ .main{display:none}
+ .app.detail .side{display:none}
+ .app.detail .main{display:flex}
+ .back{display:inline-block}
+ .top,.body{padding-left:16px;padding-right:16px}
+ .m{max-width:90%}
+}
+.rl{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:#9fb3cc}
+.rl select{flex:1;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:6px 8px;font:inherit}.rl option{color:#000}
+.nav{display:flex;gap:4px;margin-top:12px}
+.nv{flex:1;border:1px solid rgba(255,255,255,.16);background:transparent;color:#cfdcec;border-radius:6px;padding:7px 4px;font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap}.nv.on{background:#fff;color:#0f2744;border-color:#fff}.nv i{font-style:normal;background:var(--bad);color:#fff;border-radius:99px;padding:0 6px;margin-left:4px;font-size:11px}
+.map{max-width:560px}.map svg{width:100%;height:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.map polygon{fill:var(--off);stroke:var(--border);stroke-width:1}
+.pin{cursor:pointer}.pin circle{stroke:#fff;stroke-width:2.5}.pin text{font-size:10.5px;fill:var(--text);font-weight:600}
+.pin.ok circle{fill:var(--ok)}.pin.warn circle{fill:var(--warn)}.pin.bad circle{fill:var(--bad)}
+.leg{display:flex;gap:16px;margin-top:10px;font-size:12.5px;color:var(--muted)}.leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.al{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:12px 14px;margin-bottom:10px;cursor:pointer;color:var(--text)}
+.al.s2{border-left-color:var(--bad)}.al.s1{border-left-color:var(--warn)}.al b{display:block}.al small{color:var(--muted)}
+.set{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:13px}
+.set select,.is select,.is input{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:6px;padding:6px 8px;font:inherit}
+.is{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.is input{flex:1;min-width:180px}
+td.cv{text-align:center;font-weight:600}.cv.ok{background:rgba(30,142,90,.14);color:var(--ok)}.cv.warn{background:rgba(201,138,11,.16);color:var(--warn)}.cv.bad{background:rgba(197,48,48,.14);color:var(--bad)}.cv.na{color:var(--muted)}
+.badge.w{background:rgba(201,138,11,.16);color:var(--warn)}.badge.i{background:var(--accent-soft);color:var(--accent)}
+.ab{margin:4px 6px 0 0;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:6px;padding:3px 10px;font-weight:600;font-size:12px;cursor:pointer}
+.chart{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px}.chart svg{width:100%;height:auto}.chart h3{margin:0 0 8px;font-size:13px}.chart text{font-size:9px;fill:var(--muted)}
+.c-ok{fill:var(--ok)}.c-warn{fill:var(--warn)}.c-bad{fill:var(--bad)}
+@media print{.side{display:none}.app{display:block;height:auto}.main{display:block}.body{overflow:visible}}
+/* ---- Tema aziendale ---- */
+:root{--bg:#f3f5f8;--surface:#fff;--text:#1b2433;--muted:#667085;--border:#dde2ea;--accent:#1f4e8c;--accent-soft:#e8eef7;--ok:#1e8e5a;--warn:#c98a0b;--bad:#c53030;--off:#e3e7ee;--bubble:#eef1f5;--navy:#0f2744}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1522;--surface:#131f31;--text:#e6ebf2;--muted:#8d9bb0;--border:#23324a;--accent:#5b9bd5;--accent-soft:#1a2a42;--ok:#3cb87f;--warn:#e0a526;--bad:#e5605f;--off:#26354d;--bubble:#1c2b43;--navy:#0a1626}}
+:root[data-theme="dark"]{--bg:#0c1522;--surface:#131f31;--text:#e6ebf2;--muted:#8d9bb0;--border:#23324a;--accent:#5b9bd5;--accent-soft:#1a2a42;--ok:#3cb87f;--warn:#e0a526;--bad:#e5605f;--off:#26354d;--bubble:#1c2b43;--navy:#0a1626}
+body{font-size:14px;font-variant-numeric:tabular-nums}
+.side header{background:var(--navy);color:#fff;padding:20px 18px 16px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{flex:0 0 auto;width:38px;height:38px;border-radius:8px;background:#1f4e8c;display:grid;place-items:center}
+.logo::after{content:"";width:20px;height:17px;background:#fff;clip-path:polygon(50% 0,100% 32%,100% 100%,0 100%,0 32%)}
+.side header h1{color:#fff;font-size:16px;font-weight:700;letter-spacing:.01em;margin:0}
+.side header .sub{color:#9fb3cc;font-size:12px}
+.chip,.day{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:6px;color:#fff}
+.chip span,.day small{color:#9fb3cc}
+.chip.on,.day.on{background:#fff;border-color:#fff;color:#0f2744}
+.chip.on span,.day.on small{color:#4a5d78}
+.chip b{font-size:17px}
+.net{color:#9fb3cc}.net b{color:#fff}
+.search{border-radius:6px;background:var(--surface)}
+.list{padding:8px 12px 16px;background:var(--bg)}
+.wh{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;padding:12px 14px}
+.wh:hover{background:var(--surface);border-color:var(--accent)}
+.wh.sel{background:var(--accent-soft);border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.wh .n{font-size:14px}
+.light{background:#16263d;border-radius:5px;padding:4px 6px}
+.light i{background:rgba(255,255,255,.14);width:9px;height:9px}
+.light i.on.ok,.light i.on.warn,.light i.on.bad{box-shadow:0 0 0 1px rgba(255,255,255,.3)}
+.light i.on.ok{background:#2fbf7a}.light i.on.warn{background:#f0b429}.light i.on.bad{background:#ef5350}
+.empty .big{display:none}
+.top{padding:20px 28px 0}
+.top h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.body{padding:20px 28px}
+.tab{font-size:13.5px}
+.card,.k,.tc,.upd{border-radius:8px}
+.upd{background:var(--surface)}
+.k{border-top:3px solid var(--border)}
+.k.ok,.k.st2{border-top-color:var(--ok)}.k.warn,.k.st0{border-top-color:var(--warn)}.k.bad{border-top-color:var(--bad)}.k.st1{border-top-color:var(--accent)}
+.k small{text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+.k .v{font-size:26px}
+th{background:var(--bg);font-size:11px;padding:10px 16px}
+td{padding:10px 16px;font-size:13.5px}
+tbody tr:hover{background:var(--bg)}
+.av{border-radius:6px}
+.badge,.sb,.tag{border-radius:4px}
+.bar{height:6px;border-radius:3px}.bar div{border-radius:3px}
+.steps i{height:4px;border-radius:2px}
+.fb,.rq,.back{border-radius:6px}
+.m{border-radius:8px}
+.m.me{background:#1f4e8c;color:#fff}
+.compose input{border-radius:6px}
+.send{border-radius:6px;background:#1f4e8c;color:#fff}
+@media (max-width:820px){.top,.body{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+ <aside class="side">
+  <header>
+   <div class="brand"><span class="logo" aria-hidden="true"></span><div><h1>Rete Magazzini</h1>
+   <p class="sub">Monitoraggio sedi in tutta Italia</p></div></div>
+   <div class="rl"><span>Vista come</span><select id="role" aria-label="Ruolo"><option value="dir">Direzione operations</option><option value="hr">Risorse umane</option><option value="resp">Responsabile · Hub Logistico Nord</option></select></div>
+   <div class="nav" id="nav"></div>
+   <div class="days" id="days" role="tablist" aria-label="Scegli il giorno"></div>
+   <div class="stats" id="stats"></div>
+   <div class="net" id="net"></div>
+  </header>
+  <input class="search" id="q" type="search" placeholder="Cerca sede o città…" aria-label="Cerca">
+  <div class="list" id="list"></div>
+ </aside>
+ <main class="main" id="main"></main>
+</div>
+<script>
+const ST={ok:["Operativo","t-ok"],warn:["Rallentato","t-warn"],bad:["Fermo","t-bad"]};
+const W=[
+{id:0,n:"Hub Logistico Nord",c:"Milano",r:"Lombardia",s:"ok",m:["Elena Ferrari","+39 02 5550 1101"]},
+{id:1,n:"Centro Distribuzione Torino",c:"Torino",r:"Piemonte",s:"ok",m:["Paolo Gallo","+39 011 555 2202"]},
+{id:2,n:"Magazzino Laguna",c:"Venezia",r:"Veneto",s:"warn",m:["Chiara Zanon","+39 041 555 3303"]},
+{id:3,n:"Deposito Appennino",c:"Bologna",r:"Emilia-Romagna",s:"ok",m:["Luca Santi","+39 051 555 4404"]},
+{id:4,n:"Polo Logistico Centro",c:"Roma",r:"Lazio",s:"warn",m:["Marta Conti","+39 06 5550 5505"]},
+{id:5,n:"Magazzino Vesuvio",c:"Napoli",r:"Campania",s:"bad",m:["Gennaro Esposito","+39 081 555 6606"]},
+{id:6,n:"Terminal Adriatico",c:"Bari",r:"Puglia",s:"ok",m:["Giulia Lorusso","+39 080 555 7707"]},
+{id:7,n:"Hub Mediterraneo",c:"Palermo",r:"Sicilia",s:"warn",m:["Salvo Greco","+39 091 555 8808"]},
+{id:8,n:"Deposito Sardegna Sud",c:"Cagliari",r:"Sardegna",s:"ok",m:["Ilaria Murgia","+39 070 555 9909"]},
+{id:9,n:"Centro Arno",c:"Firenze",r:"Toscana",s:"ok",m:["Matteo Bianchi","+39 055 555 1010"]}];
+const NM=["Marco Rossi","Sara Romano","Davide Colombo","Anna Ricci","Andrea Marino","Giorgia Greco","Simone Bruno","Francesca Gallo","Stefano Costa","Valentina Fontana","Alessio Moretti","Elisa Barbieri","Fabio Lombardi","Martina Giordano","Roberto Rinaldi","Silvia Caruso","Nicola Ferrara","Laura Mancini","Giovanni Villa","Paola Leone"];
+const MO=["Sciopero dei mezzi pubblici, arrivo in ritardo","Visita medica programmata","Permesso per motivi familiari","Badge smagnetizzato, in attesa di sostituzione","Malattia, certificato in arrivo","Trasferta presso un’altra sede","Auto in panne, arrivo previsto in tarda mattinata","Ferie concordate con il responsabile"];
+const FN=["Marco","Sara","Davide","Anna","Andrea","Giorgia","Simone","Francesca","Stefano","Valentina","Alessio","Elisa","Fabio","Martina","Roberto","Silvia","Nicola","Laura","Giovanni","Paola"],SN=["Rossi","Romano","Colombo","Ricci","Marino","Greco","Bruno","Gallo","Costa","Fontana","Moretti","Barbieri","Lombardi","Giordano","Rinaldi","Caruso","Ferrara","Mancini","Villa","Leone"];
+const RL=["Capo turno","Magazziniere","Carrellista","Addetto picking","Addetto spedizioni","Responsabile qualità","Impiegato amministrativo","Addetto sicurezza"];
+W.forEach((w,i)=>{w.e=[];const cnt=20+(i%5);for(let j=0;j<cnt;j++){
+ const ok=w.s==="bad"?j<2:((i+j*2)%5!==0);
+ w.e.push({n:FN[(i*3+j*7)%20]+" "+SN[(i*5+j*3+Math.floor(j/20))%20],r:RL[(i+j*3)%RL.length],sh:j%3,ok,t:ok?"0"+(5+((i+j)%3))+":"+String((i*13+j*17)%60).padStart(2,"0"):null,mo:ok?null:(w.s==="bad"&&j%2===0?"Lettori badge fuori uso per il guasto elettrico":MO[(i*2+j)%MO.length])});}
+ w.msgs=[{me:0,t:"Buongiorno! Sono "+w.m[0]+", responsabile della sede di "+w.c+". Come posso aiutarti?",h:"08:30"}];});
+const VM=["Furgone","Camion 12 t","Bilico","Camion frigo","Furgone"];
+W.forEach((w,i)=>{w.s0=w.s;w.e0=w.e;w.tr0=[];const k=4+(i%3);for(let j=0;j<k;j++){const st=w.s==="bad"?(j===0?1:0):[1,2,0,1,2,1][(i*2+j*5)%6];w.tr0.push({n:FN[(i*5+j*3+1)%20]+" "+SN[(i*7+j*11+4)%20],v:VM[(i+j)%5],p:String.fromCharCode(65+(i*3+j)%26,65+(i+j*5)%26)+" "+(100+(i*97+j*131)%900)+" "+String.fromCharCode(65+(i*7+j*2)%26,65+(j*9+i)%26),d:W[(i+1+j)%10].c,st,t:String(5+(i+j*2)%12).padStart(2,"0")+":"+String((i*17+j*23)%60).padStart(2,"0")});}w.tr=w.tr0;});
+let day=0,miss=false;
+const GG=["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"],MS=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const dt=d=>{const x=new Date();x.setDate(x.getDate()-d);return x;};
+const dl=d=>d===0?"oggi":d===1?"ieri":GG[dt(d).getDay()].slice(0,3)+" "+dt(d).getDate()+" "+MS[dt(d).getMonth()].slice(0,3);
+const dfull=d=>GG[dt(d).getDay()]+" "+dt(d).getDate()+" "+MS[dt(d).getMonth()];
+const PAST={ok:["Giornata regolare: tutte le spedizioni sono partite in orario e non abbiamo registrato criticità.","Giornata senza intoppi. Abbiamo chiuso tutti gli ordini previsti e le ricezioni sono state scaricate nei tempi.","Operatività piena per tutto il turno. Nessun ritardo da segnalare."],
+warn:["Giornata con rallentamenti: un ritardo dei trasportatori ha spostato diversi carichi al pomeriggio. Recuperato solo in parte entro fine turno.","Abbiamo lavorato a ritmo ridotto per un malfunzionamento temporaneo del sistema di etichettatura, risolto in serata.","Rallentamenti per il maltempo sulle tratte di collegamento: alcuni mezzi sono arrivati in ritardo."],
+bad:["Sede ferma per gran parte del turno a causa di un guasto agli impianti. Gli ordini urgenti sono stati dirottati su altre sedi.","Attività sospesa per un’ispezione tecnica straordinaria degli scaffali. Ripresa il giorno successivo.","Blocco totale per un’interruzione di corrente nella zona industriale. Nessun danno alla merce."]};
+function setDay(d){day=d;W.forEach(w=>{if(d===0){w.s=w.s0;w.e=w.e0;w.tr=w.tr0;w.du=null;return;}
+ const h=(w.id*7+d*13+d*d*3)%10;w.s=h<6?"ok":h<9?"warn":"bad";
+ w.e=w.e0.map((e,j)=>{const ok=w.s==="bad"?(j+d)%4===0:((w.id+j*3+d*5)%7!==0);return {n:e.n,r:e.r,sh:e.sh,ok,t:ok?"0"+(5+((w.id+j+d)%3))+":"+String((w.id*11+j*19+d*7)%60).padStart(2,"0"):null,mo:ok?null:MO[(w.id+j+d)%MO.length]};});
+ w.tr=w.tr0.map(x=>({...x,st:2}));const p=PAST[w.s];w.du=["18:"+String((w.id*7+d*11)%40+10).padStart(2,"0"),p[(w.id+d)%p.length]];});}
+function days(){$("#days").innerHTML=[0,1,2,3,4,5,6].map(d=>`<button class="day ${day===d?"on":""}" data-d="${d}" title="${dfull(d)}"><small>${d===0?"oggi":GG[dt(d).getDay()].slice(0,3)}</small><b>${dt(d).getDate()}</b></button>`).join("");
+ document.querySelectorAll(".day").forEach(b=>b.onclick=()=>{setDay(+b.dataset.d);days();nav();stats();list();detail();});}
+function cv(w){const t=w.e.length,o=w.e.filter(e=>e.ok).length,p=Math.round(o/t*100);return {t,o,p,c:p>=90?"ok":p>=70?"warn":"bad"};}
+function trk(w){const c=cv(w);return `<div class="trk ${c.c}"><span>Dipendenti ${c.o}/${c.t}</span><div class="bar"><div style="width:${c.p}%"></div></div></div>`;}
+function trHtml(w){const c=[0,0,0];w.tr.forEach(x=>c[x.st]++);
+ const L=["In preparazione","In viaggio","Giunto a destinazione"],I=["","",""],T=["Partenza prevista alle ","Arrivo stimato alle ","Arrivato alle "];
+ return `<h3 class="hd">Addetti ai trasporti</h3><div class="kp">${L.map((l,k)=>`<div class="k st${k}"><small>${I[k]} ${l}</small><div class="v">${c[k]}</div></div>`).join("")}</div><div class="trl">${w.tr.map(x=>`<div class="tc st${x.st}"><span class="av">${ini(x.n)}</span><div><b>${x.n}</b><br><small>${x.v} · ${x.p} · verso ${x.d}</small><br><small>${T[x.st]}${x.t}${dly(w,x)?" · in ritardo di "+dly(w,x)+" min":""}</small></div><span class="sb">${L[x.st]}</span><div class="steps"><i class="on"></i><i class="${x.st>0?"on":""}"></i><i class="${x.st>1?"on":""}"></i></div></div>`).join("")}</div>`;}
+const LL=[[9.19,45.46],[7.69,45.07],[12.33,45.44],[11.34,44.49],[12.5,41.9],[14.27,40.85],[16.87,41.12],[13.36,38.12],[9.11,39.22],[11.25,43.77]];
+const IT=[[[6.9,45.1],[7,45.9],[8.4,46.4],[9.3,46.5],[10.5,46.9],[12.2,47],[13.7,46.5],[13.6,45.7],[12.4,45.4],[12.4,44.6],[12.3,44.1],[13.6,43.5],[14.2,42.4],[15.1,42.1],[16.2,41.9],[15.9,41.5],[16.9,41.1],[18.5,40.2],[18.3,39.8],[17.1,40.4],[16.6,39.9],[17.1,39],[16.6,38.4],[15.7,37.95],[16,38.7],[15.7,39.9],[15,40.1],[14.9,40.6],[14.3,40.8],[13,41.3],[12.3,41.8],[11.1,42.4],[10.5,42.9],[10.3,43.5],[9.9,44],[8.8,44.4],[8.1,43.9],[7.5,43.8],[7,44.1]],[[12.4,37.9],[13.4,38.2],[14.6,38],[15.6,38.25],[15.3,37.3],[15.1,36.7],[14.4,36.8],[13.4,37.1],[12.5,37.6]],[[8.2,40.9],[8.4,41.2],[9.2,41.25],[9.6,40.8],[9.7,39.9],[9.5,39.1],[8.9,38.9],[8.4,39.2],[8.4,40]]];
+const P=p=>[Math.round((p[0]-6.2)*23+10),Math.round((47.3-p[1])*31+10)];
+const ISS={0:[{c:'Guasto',g:'Bassa',d:'Manutenzione baia di carico 4',h:'05:30',f:'06:45',st:'Risolta'}],1:[{c:'Guasto',g:'Bassa',d:'Manutenzione programmata del muletto automatico (domani)',h:'07:55',st:'Aperta'}],2:[{c:'Meteo',g:'Media',d:'Maree alte, ritardi dei trasporti in laguna',h:'07:00',st:'Aperta'}],3:[{c:'Altro',g:'Bassa',d:'Inventario trimestrale zona B',h:'07:00',st:'In corso'}],4:[{c:'Software',g:'Media',d:'Aggiornamento WMS, etichette lente',h:'06:40',st:'In corso'},{c:'Sciopero',g:'Media',d:'Sciopero dei corrieri locali',h:'07:30',st:'Aperta'}],5:[{c:'Guasto',g:'Alta',d:'Guasto alla cabina elettrica: nastri bloccati e celle frigo su generatore',h:'06:10',st:'In corso'}],7:[{c:'Trasporti',g:'Media',d:'Nave da Napoli in ritardo, container spostato al pomeriggio',h:'07:15',st:'Aperta'}],9:[{c:'Altro',g:'Bassa',d:'Audit sulla sicurezza in corso',h:'07:50',st:'In corso'}]};
+W.forEach(w=>{w.iss=(ISS[w.id]||[]).map(x=>({...x}));});
+let role='dir',view='sede',thrP=80,thrD=30,CSV='';
+const AP={},CR=['Capo turno','Carrellista','Addetto sicurezza'],SH=['Mattina 06–14','Pomeriggio 14–22','Notte 22–06'],NL=String.fromCharCode(10);
+const vis=()=>role==='resp'?[W[0]]:W,priv=()=>role!=='dir';
+const apSt=(w,e)=>AP[w.id+'|'+e.n+'|'+day]||['In attesa','Approvato','Approvato','In attesa'][(w.id+e.n.length+day)%4];
+const pend=w=>w.e.filter(e=>!e.ok&&apSt(w,e)==='In attesa').length;
+function apBadge(w,e){const s=apSt(w,e),k=w.id+'|'+e.n+'|'+day,c=s==='Approvato'?'y':s==='Rifiutato'?'n':'w';return `<span class='badge ${c}'>Giustificativo: ${s}</span> Inserito da ${w.m[0]}`+(role==='hr'&&s==='In attesa'?`<br><button class='ab' data-k='${k}' data-v='Approvato'>Approva</button><button class='ab' data-k='${k}' data-v='Rifiutato'>Rifiuta</button>`:'');}
+const dly=(w,x)=>x.st===1?[0,0,45,0,20,75][(w.id+w.tr.indexOf(x))%6]:0;
+function unc(w){const r=[];CR.forEach(c=>[0,1,2].forEach(s=>{const a=w.e.filter(e=>e.r===c&&e.sh===s);if(a.length&&!a.some(e=>e.ok))r.push(c+' ('+SH[s].split(' ')[0].toLowerCase()+')');}));return r;}
+function covHtml(w){const u=unc(w);return `<div class='kp'><div class='k ${u.length?'bad':'ok'}'><small>Ruoli critici scoperti</small><div class='v'>${u.length}</div><div class='d'>${u.length?u.join(', '):'Tutti i ruoli critici sono coperti'}</div></div></div><p class='sub' style='margin-bottom:10px'>Presenti/organico per ruolo e turno. Minimo richiesto: almeno 1 presente per ogni ruolo con organico assegnato.</p><div class='card scroll'><table><thead><tr><th>Ruolo</th>${SH.map(s=>`<th style='text-align:center'>${s}</th>`).join('')}</tr></thead><tbody>${RL.map(r=>`<tr><td>${r}${CR.includes(r)?' <small>· critico</small>':''}</td>${[0,1,2].map(s=>{const a=w.e.filter(e=>e.r===r&&e.sh===s),p=a.filter(e=>e.ok).length;return `<td class='cv ${!a.length?'na':!p?'bad':p<a.length?'warn':'ok'}'>${a.length?p+'/'+a.length:'—'}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;}
+const mn=t=>{const q=t.split(':');return +q[0]*60+ +q[1];};
+function issHtml(w){const can=role!=='hr';return (can?`<div class='is'><select id='ic'><option>Guasto</option><option>Meteo</option><option>Sciopero</option><option>Software</option><option>Trasporti</option><option>Altro</option></select><select id='ig'><option>Bassa</option><option>Media</option><option>Alta</option></select><input id='idsc' placeholder='Descrivi il problema…' aria-label='Descrizione'><button class='send' id='ia' style='padding:8px 18px'>Segnala</button></div>`:'')+(w.iss.length?`<div class='trl'>${w.iss.map((x,k)=>{const d=x.f?mn(x.f)-mn(x.h):0;return `<div class='tc' style='grid-template-columns:1fr auto'><div><b>${x.c}</b> · ${x.d}<br><small>Aperta alle ${x.h}${x.f?' · risolta alle '+x.f+(d>0?' (durata '+Math.floor(d/60)+' h '+d%60+' min)':''):''}</small></div><div><span class='badge ${x.g==='Alta'?'n':x.g==='Media'?'w':'i'}'>${x.g}</span> ${can&&x.st!=='Risolta'?`<button class='ab' data-i='${k}'>${x.st} › ${x.st==='Aperta'?'in corso':'risolta'}</button>`:`<span class='badge ${x.st==='Risolta'?'y':'i'}'>${x.st}</span>`}</div></div>`;}).join('')}</div>`:`<p class='sub'>Nessuna segnalazione.</p>`);}
+function bindIs(w){const a=$('#ia');if(a)a.onclick=()=>{const d=$('#idsc').value.trim();if(!d)return;w.iss.unshift({c:$('#ic').value,g:$('#ig').value,d,h:hhmm(),st:'Aperta'});nav();detail();};document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const x=w.iss[+b.dataset.i];if(x.st==='Aperta')x.st='In corso';else{x.st='Risolta';x.f=hhmm();}nav();detail();});}
+function alerts(){const a=[];vis().forEach(w=>{const c=cv(w),sc=unc(w),hi=day?[]:w.iss.filter(i=>i.st!=='Risolta'&&i.g==='Alta');if(w.s==='bad')a.push({w,v:2,t:'Sede ferma',d:'Attività sospesa.'});else if(w.s==='warn')a.push({w,v:1,t:'Sede rallentata',d:'Attività a ritmo ridotto.'});if(c.p<thrP)a.push({w,v:c.p<60?2:1,t:'Presenze sotto soglia',d:c.o+'/'+c.t+' presenti ('+c.p+'%), soglia '+thrP+'%'});w.tr.forEach(x=>{const m=dly(w,x);if(m&&m>=thrD)a.push({w,v:m>=60?2:1,t:'Mezzo in ritardo',d:x.n+' ('+x.p+') verso '+x.d+': +'+m+' min'});});if(sc.length)a.push({w,v:1,t:'Ruoli critici scoperti',d:sc.join(', ')});hi.forEach(i=>a.push({w,v:2,t:'Segnalazione ad alta gravità',d:i.c+': '+i.d}));if(role==='hr'&&pend(w))a.push({w,v:0,t:'Giustificativi da approvare',d:pend(w)+' in attesa'});});return a.sort((x,y)=>y.v-x.v);}
+function nav(){const n=alerts().length,V=[['sede','Sedi']].concat(role==='dir'?[['map','Mappa']]:[],[['alert','Avvisi'+(n?`<i>${n}</i>`:'')]],role==='dir'?[['rep','Report']]:[]);$('#nav').innerHTML=V.map(q=>`<button class='nv ${view===q[0]?'on':''}' data-v='${q[0]}'>${q[1]}</button>`).join('');document.querySelectorAll('.nv').forEach(b=>b.onclick=()=>{view=b.dataset.v;if(view!=='sede')$('#app').classList.add('detail');else if(sel===null)$('#app').classList.remove('detail');nav();list();detail();});}
+function mapHtml(){const poly=IT.map(a=>`<polygon points='${a.map(p=>P(p).join(',')).join(' ')}'/>`).join('');const pins=vis().map(w=>{const q=P(LL[w.id]),L=w.id===1;return `<g class='pin ${w.s}' data-id='${w.id}'><circle cx='${q[0]}' cy='${q[1]}' r='8'/><text x='${q[0]+(L?-12:12)}' y='${q[1]+4}' text-anchor='${L?'end':'start'}'>${w.c}</text></g>`;}).join('');return `<div class='map'><svg viewBox='0 0 310 360' role='img' aria-label='Mappa delle sedi'>${poly}${pins}</svg><div class='leg'><span><i style='background:var(--ok)'></i>Operativo</span><span><i style='background:var(--warn)'></i>Rallentato</span><span><i style='background:var(--bad)'></i>Fermo</span></div></div>`;}
+function alHtml(){const a=alerts(),o=(l,v)=>l.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');return `<div class='set'><label>Soglia presenze <select id='tp'>${o([70,80,90],thrP)}</select> %</label><label>Ritardo mezzi da <select id='td'>${o([15,30,60],thrD)}</select> min</label></div>`+(a.length?a.map(x=>`<button class='al s${x.v}' data-id='${x.w.id}'><b>${x.t} · ${x.w.n}</b><small>${x.w.c} — ${x.d}</small></button>`).join(''):`<p class='sub'>Nessun avviso attivo.</p>`);}
+function repData(){const d0=day,s=[],ps={};W.forEach(w=>{ps[w.id]={b:0,w:0,p:0};});for(let d=6;d>=0;d--){setDay(d);const o={d,ok:0,warn:0,bad:0,o:0,t:0};W.forEach(w=>{o[w.s]++;const c=cv(w);o.o+=c.o;o.t+=c.t;ps[w.id].p+=c.p;if(w.s==='bad')ps[w.id].b++;if(w.s==='warn')ps[w.id].w++;});s.push(o);}setDay(d0);return {s,ps};}
+function repHtml(){const D=repData(),s=D.s,ps=D.ps,N=W.length;const bars=s.map((o,i)=>{const x=20+i*60;let y=140;return ['ok','warn','bad'].map(k=>{const h=o[k]/N*120;y-=h;return h?`<rect class='c-${k}' x='${x}' y='${y}' width='36' height='${h}' rx='2'/>`:'';}).join('')+`<text x='${x+18}' y='154' text-anchor='middle'>${dl(o.d)}</text>`;}).join('');const pc=s.map(o=>Math.round(o.o/o.t*100)),pts=pc.map((p,i)=>[38+i*60,100-(p-60)*2.2]);const line=`<polyline points='${pts.map(q=>q.join(',')).join(' ')}' fill='none' stroke='var(--accent)' stroke-width='2'/>`+pts.map((q,i)=>`<circle cx='${q[0]}' cy='${q[1]}' r='3' fill='var(--accent)'/><text x='${q[0]}' y='${q[1]-8}' text-anchor='middle'>${pc[i]}%</text>`).join('');const cc={};W.forEach(w=>w.iss.forEach(i=>{cc[i.c]=(cc[i.c]||0)+1;}));const mx=Math.max(1,...Object.values(cc));CSV=['Sede;Città;Giorni fermo (7g);Giorni rallentata (7g);Presenza media (%)'].concat(W.map(w=>[w.n,w.c,ps[w.id].b,ps[w.id].w,Math.round(ps[w.id].p/7)].join(';'))).join(NL);return `<div class='fl'><button class='fb' id='ex'>Esporta CSV</button><button class='fb' id='pr'>Stampa / PDF</button></div><div id='exb'></div><div class='chart'><h3>Stato delle sedi per giorno (verde operative, giallo rallentate, rosso ferme)</h3><svg viewBox='0 0 440 165'>${bars}</svg></div><div class='chart'><h3>Presenza media della rete (%)</h3><svg viewBox='0 0 440 120'>${line}</svg></div><div class='chart'><h3>Cause più frequenti (segnalazioni)</h3>${Object.keys(cc).map(k=>`<div class='prog'><span style='width:90px'>${k}</span><div class='bar'><div style='width:${cc[k]/mx*100}%'></div></div><b>${cc[k]}</b></div>`).join('')}</div><div class='card scroll'><table><thead><tr><th>Sede</th><th>Giorni fermo</th><th>Giorni rallentata</th><th>Presenza media</th></tr></thead><tbody>${W.map(w=>`<tr><td>${w.n}</td><td>${ps[w.id].b}</td><td>${ps[w.id].w}</td><td>${Math.round(ps[w.id].p/7)}%</td></tr>`).join('')}</tbody></table></div>`;}
+function panel(m){const T={map:['Mappa della rete','Stato di ogni sede'],alert:['Avvisi e soglie','Allarmi calcolati sui dati del giorno selezionato'],rep:['Report e trend','Ultimi 7 giorni']}[view];m.innerHTML=`<div class='top'><button class='back' id='bk'>← Menu</button><h2>${T[0]}</h2><div class='row'>${T[1]}</div></div><div class='body' id='bd'></div>`;$('#bk').onclick=()=>$('#app').classList.remove('detail');const bd=$('#bd'),go=id=>{sel=+id;view='sede';tab='dip';nav();list();detail();};if(view==='map'){bd.innerHTML=mapHtml();document.querySelectorAll('.pin').forEach(g=>g.onclick=()=>go(g.dataset.id));}else if(view==='alert'){bd.innerHTML=alHtml();$('#tp').onchange=e=>{thrP=+e.target.value;nav();detail();};$('#td').onchange=e=>{thrD=+e.target.value;nav();detail();};document.querySelectorAll('.al').forEach(b=>b.onclick=()=>go(b.dataset.id));}else{bd.innerHTML=repHtml();$('#ex').onclick=()=>{$('#exb').innerHTML=`<textarea id='csv' rows='8' style='width:100%;margin-bottom:8px;font:12px monospace' readonly></textarea><button class='fb' id='cp'>Copia negli appunti</button>`;const t=$('#csv');t.value=CSV;$('#cp').onclick=()=>{t.select();try{navigator.clipboard.writeText(CSV);}catch(e){document.execCommand('copy');}};};$('#pr').onclick=()=>{try{window.print();}catch(e){}};}}
+const REP={ok:["Perfetto, la sede procede regolarmente.","Ricevuto, ti aggiorno appena possibile.","Nessun problema, è tutto sotto controllo."],
+warn:["Abbiamo qualche rallentamento, ci stiamo lavorando.","Ricevuto. Siamo a ranghi ridotti, ti aggiorno a breve.","Grazie, stiamo riorganizzando i turni."],
+bad:["La sede è ferma al momento, stiamo gestendo l’emergenza.","Ricevuto, ti richiamo appena abbiamo novità.","Servono ancora alcune ore per il ripristino."]};
+const UPD={
+0:["07:40","Attività regolare: tutte le baie di carico sono operative e le spedizioni partono in orario. Nessuna criticità da segnalare."],
+1:["07:55","Operatività piena. Unica nota: domani mattina manutenzione programmata del muletto automatico in corsia C, senza impatto sulle consegne."],
+2:["08:10","Siamo in rallentamento. Le condizioni meteo e di marea in laguna ritardano i trasporti via acqua, quindi i mezzi arrivano in ritardo e le baie restano libere a intermittenza. Stimiamo circa 3 ore di ritardo sulle consegne in uscita. Non dipende dal personale."],
+3:["07:30","Tutto regolare. Stiamo completando l’inventario trimestrale della zona B senza fermare le attività."],
+4:["08:20","Rallentamenti sulle uscite. Il sistema di gestione magazzino (WMS) è in aggiornamento e alcune etichette vengono generate lentamente, mentre uno sciopero dei corrieri locali riduce i ritiri del pomeriggio. Il personale è al completo. Ripristino previsto in giornata."],
+5:["06:50","Sede ferma. Un guasto alla cabina elettrica ha bloccato i nastri trasportatori e le celle frigorifere sono su generatore. Il tecnico è in sede e il ripristino è previsto entro stasera. La merce deperibile è stata messa in sicurezza e gli ordini urgenti vengono dirottati su altre sedi."],
+6:["07:45","Attività regolare. Segnalo un picco di ordini per la promozione in corso: abbiamo attivato un turno extra per smaltirli."],
+7:["08:00","Rallentamento dovuto al ritardo della nave da Napoli, che sposta lo scarico del container principale al pomeriggio. Nel frattempo lavoriamo sugli ordini già in magazzino. Il personale è presente."],
+8:["07:35","Operatività piena. Spedizioni verso il continente in linea con il programma e traghetti confermati."],
+9:["07:50","Tutto in regola. Oggi è in corso una visita di audit sulla sicurezza, che procede senza fermare le attività."]};
+function upd(w){const [h,t]=day?w.du:(w.u||UPD[w.id]);return `<div class="upd ${w.s}${w.fl?" flash":""}" id="ub"><div class="uh"><span class="av">${ini(w.m[0])}</span><b>${day?"Riepilogo di":"Aggiornamento di"} ${w.m[0]}</b><time>${dl(day)}, ${h}</time></div><p>${t}</p>${day?"":`<button class="rq" id="rq" ${w.pend?"disabled":""}>${w.pend?"Richiesta inviata, in attesa di risposta…":"Richiedi nuovo aggiornamento"}</button>`}</div>`;}
+const NEW={ok:["Confermo: situazione stabile, nessuna novità dall’ultimo aggiornamento. Spedizioni e ricezioni in linea con il piano.","Aggiornamento rapido: i carichi in uscita sono al 70% del programma della mattinata, nessun intoppo.","Tutto regolare. Abbiamo appena chiuso un’altra tornata di spedizioni e le baie sono libere."],
+warn:["Situazione in lento miglioramento: stiamo recuperando parte del ritardo, ma servono ancora alcune ore per tornare a regime.","Nessuna novità risolutiva: restiamo in rallentamento e ti aggiorno appena cambia qualcosa. Gli ordini urgenti hanno la precedenza.","Stiamo riorganizzando le priorità di carico per limitare l’impatto sulle consegne del pomeriggio."],
+bad:["Il tecnico ha completato la diagnosi e i pezzi di ricambio sono in arrivo. Sede ancora ferma, ripristino stimato in serata.","Sede ancora ferma. Gli ordini urgenti sono stati dirottati su altre sedi e la merce deperibile è sotto controllo.","Nessun cambio di stato per ora: i lavori di ripristino procedono e ti riscrivo appena si riparte."]};
+function bind(){const b=$("#rq");if(b)b.onclick=reqUpd;}
+function refreshUpd(id){if(sel!==id)return;const el=$("#ub");if(el){el.outerHTML=upd(W[id]);bind();}}
+function reqUpd(){const id=sel,w=W[id];if(w.pend)return;w.pend=true;refreshUpd(id);
+ setTimeout(()=>{const r=NEW[w.s0];w.u=[hhmm(),r[Math.floor(Math.random()*r.length)]];w.pend=false;w.fl=true;refreshUpd(id);w.fl=false;},2500+Math.random()*1000);}
+let sel=null,tab="dip",filt="all",query="";
+const $=s=>document.querySelector(s),ini=n=>n.split(" ").map(x=>x[0]).join("");
+const hhmm=()=>new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
+const light=s=>`<span class="light"><i class="ok ${s==="ok"?"on":""}"></i><i class="warn ${s==="warn"?"on":""}"></i><i class="bad ${s==="bad"?"on":""}"></i></span>`;
+function stats(){const T=vis().reduce((a,w)=>a+w.e.length,0),O=vis().reduce((a,w)=>a+w.e.filter(e=>e.ok).length,0),V=vis().reduce((a,w)=>a+w.tr.filter(x=>x.st===1).length,0);$("#net").innerHTML=`Rete: <b>${O}/${T}</b> dipendenti presenti · <b>${V}</b> mezzi in viaggio`;const c=k=>vis().filter(w=>w.s===k).length;
+ $("#stats").innerHTML=[["all","Tutte",vis().length],["ok","Operative",c("ok")],["warn","Rallentate",c("warn")],["bad","Ferme",c("bad")]]
+ .map(([k,l,n])=>`<button class="chip ${filt===k?"on":""}" data-f="${k}"><b>${n}</b><span>${l}</span></button>`).join("");
+ document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{filt=b.dataset.f;stats();list();});}
+function list(){const q=query.toLowerCase();
+ const a=vis().filter(w=>(filt==="all"||w.s===filt)&&(w.n+w.c+w.r).toLowerCase().includes(q));
+ $("#list").innerHTML=a.length?a.map(w=>`<button class="wh ${sel===w.id?"sel":""}" data-id="${w.id}"><div class="n">${w.n}</div><div class="c">${w.c} · ${w.r}</div><div class="state">${light(w.s)}<span class="${ST[w.s][1]}">${ST[w.s][0]}</span></div>${trk(w)}</button>`).join(""):`<p class="empty">Nessuna sede trovata</p>`;
+ document.querySelectorAll(".wh").forEach(b=>b.onclick=()=>{sel=+b.dataset.id;tab="dip";view="sede";nav();$("#app").classList.add("detail");list();detail();});}
+function detail(){const m=$("#main");if(view!=="sede"){panel(m);return;}
+ if(sel===null){m.innerHTML=`<div class="empty"><div class="big">🏭</div><h2>Seleziona un magazzino</h2><p>Scegli una sede dall’elenco per vedere dipendenti e contattare il responsabile.</p></div>`;return;}
+ const w=W[sel],ok=w.e.filter(e=>e.ok).length,p=Math.round(ok/w.e.length*100);
+ m.innerHTML=`<div class="top"><button class="back" id="bk">← Sedi</button><h2>${w.n}</h2>
+ <div class="row"><span>${w.c}, ${w.r}</span><span class="state">${light(w.s)}<span class="${ST[w.s][1]}">${ST[w.s][0]}</span></span><span>Responsabile: ${w.m[0]}</span>${day?`<span class="tag">Storico · ${dfull(day)}</span>`:""}</div>
+ ${upd(w)}<div class="tabs"><button class="tab ${tab==="dip"?"on":""}" data-t="dip">Dipendenti ${ok}/${w.e.length}</button><button class="tab ${tab==="tr"?"on":""}" data-t="tr">Trasporti (${w.tr.length})</button><button class="tab ${tab==="cv"?"on":""}" data-t="cv">Copertura</button><button class="tab ${tab==="is"?"on":""}" data-t="is">Segnalazioni (${w.iss.filter(i=>i.st!=='Risolta').length})</button>${role==='resp'?'':`<button class="tab ${tab==="chat"?"on":""}" data-t="chat">Chat con il manager</button>`}</div></div>
+ <div class="body" id="bd"></div>`;
+ $("#bk").onclick=()=>{$("#app").classList.remove("detail");};bind();
+ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{tab=b.dataset.t;detail();});
+ const bd=$("#bd");
+ if(tab==="dip"){bd.innerHTML=`<div class="kp"><div class="k ${cv(w).c}"><small>Dipendenti presenti</small><div class="v">${ok}<span>/${w.e.length}</span></div><div class="bar"><div style="width:${p}%"></div></div><div class="d">${p}% della squadra è in sede</div></div><div class="k ${w.e.length-ok?"bad":"ok"}"><small>Mancano</small><div class="v">${w.e.length-ok}</div><div class="d">ingressi non confermati · ${pend(w)} giustificativi in attesa</div></div></div><div class="fl"><button class="fb ${miss?"":"on"}" data-m="0">Tutti (${w.e.length})</button><button class="fb ${miss?"on":""}" data-m="1">Solo mancanti (${w.e.length-ok})</button></div>
+ <div class="card scroll"><table><thead><tr><th>Nominativo</th><th>Ruolo</th><th>Ingresso badge</th></tr></thead><tbody>${w.e.filter(e=>!miss||!e.ok).map(e=>`<tr><td><span class="av">${ini(e.n)}</span>${e.n}</td><td>${e.r}</td><td>${e.ok?`<span class="badge y">✓ Confermato · ${e.t}</span>`:`<span class="badge n">✕ Non confermato</span><div class="why">${priv()?"“"+e.mo+"”":"Motivo riservato a HR e al responsabile"}<small>${apBadge(w,e)}</small></div>`}</td></tr>`).join("")}</tbody></table></div>`;document.querySelectorAll(".fb").forEach(b=>b.onclick=()=>{miss=b.dataset.m==="1";detail();});document.querySelectorAll(".ab").forEach(b=>b.onclick=()=>{AP[b.dataset.k]=b.dataset.v;nav();detail();});}
+ else if(tab==="tr"){bd.innerHTML=trHtml(w);}else if(tab==="cv"){bd.innerHTML=covHtml(w);}else if(tab==="is"){bd.innerHTML=issHtml(w);bindIs(w);}
+ else{bd.innerHTML=`<div class="chat"><div class="mgr"><span class="av">${ini(w.m[0])}</span><div><b>${w.m[0]}</b><small><span class="dot"></span>Responsabile sede · ${w.m[1]}</small></div></div>
+ <div class="msgs" id="ms"></div><div class="compose"><input id="in" placeholder="Scrivi un messaggio…" autocomplete="off" aria-label="Messaggio"><button class="send" id="sd">Invia</button></div></div>`;
+ msgs();$("#sd").onclick=send;$("#in").onkeydown=e=>{if(e.key==="Enter")send();};}}
+function msgs(){const w=W[sel],ms=$("#ms");if(!ms)return;ms.innerHTML="";
+ w.msgs.forEach(x=>{const d=document.createElement("div");d.className="m"+(x.me?" me":"");d.textContent=x.t;const t=document.createElement("time");t.textContent=x.h;d.appendChild(t);ms.appendChild(d);});
+ ms.scrollTop=ms.scrollHeight;}
+function send(){const i=$("#in"),v=i.value.trim();if(!v)return;const id=sel,w=W[id];
+ w.msgs.push({me:1,t:v,h:hhmm()});i.value="";msgs();
+ setTimeout(()=>{const r=REP[w.s0];w.msgs.push({me:0,t:r[Math.floor(Math.random()*r.length)],h:hhmm()});if(sel===id&&tab==="chat")msgs();},1200);}
+$("#q").oninput=e=>{query=e.target.value;list();};
+days();nav();stats();list();detail();
+$("#role").onchange=e=>{role=e.target.value;view='sede';tab='dip';sel=role==='resp'?0:null;$("#app").classList.toggle('detail',role==='resp');nav();stats();list();detail();};
+</script>
+</body>
+</html>
